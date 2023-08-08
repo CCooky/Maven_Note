@@ -24,7 +24,7 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 这里说的项目暂时我们就认为是，工程下的模块。其实工程也可以变成Maven项目，这样的话，该工程下的模块（也是Maven）就可以直接使用这个工程的依赖，这样有一个父子关系，后面到了高级阶段再细说。
 
-==标准化的项目结构：==
+**标准化的项目结构：**
 
 项目结构我们都知道，每一个开发工具（IDE）都有自己不同的项目结构，它们互相之间不通用。我再eclipse中创建的目录，无法在idea中进行使用，这就造成了很大的不方便，如下图:前两个是以后开发经常使用的开发工具。
 
@@ -34,13 +34,13 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 <img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20210726153815028.png" alt="image-20210726153815028" style="zoom:80%;" />
 
-==标准化的构建流程：==
+**标准化的构建流程：**
 
 <img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20210726154144488.png" alt="image-20210726154144488" style="zoom:80%;" />
 
 如上图所示我们开发了一套系统，代码需要进行编译、测试、打包、发布，这些操作如果需要反复进行就显得特别麻烦，而Maven提供了一套简单的命令来完成项目构建。其中打包就是生成jar包，里面存放我们的字节码文件（.class文件）
 
-==依赖管理：==
+**依赖管理：**
 
 依赖管理其实就是管理你项目所依赖的第三方资源（jar包、插件）。如之前我们项目中需要使用JDBC和Druid的话，就需要去网上下载对应的依赖包（当前之前是老师已经下载好提供给大家了），复制到项目中，还要将jar包加入工作环境这一系列的操作。如下图所示
 
@@ -58,7 +58,7 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 ## 2. Maven简介
 
-> ==Apache Maven 是一个项目管理和构建工具==，它基于项目对象模型(POM)的概念，**通过一小段描述信息来管理项目的构建、报告和文档。**
+> Apache Maven 是一个项目管理和构建工具，它基于项目对象模型(POM)的概念，**通过一小段描述信息来管理项目的构建、报告和文档。**
 >
 > 官网 ：http://maven.apache.org/ 
 
@@ -72,11 +72,11 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 <img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20220129133847498.png" alt="image-20220129133847498" style="zoom:80%;" />
 
-==插件(Plugin)==如上图所示就是Maven的模型，而我们先看紫色框框起来的部分，他就是用来完成 `标准化构建流程` 。如我们需要编译，Maven提供了一个编译插件供我们使用，我们需要打包，Maven就提供了一个打包插件提供我们使用等。最终会有很多插件（Maven已经写好了）来帮我们做好项目最终需要的东西。
+**插件(Plugin)**如上图所示就是Maven的模型，而我们先看紫色框框起来的部分，他就是用来完成 `标准化构建流程` 。如我们需要编译，Maven提供了一个编译插件供我们使用，我们需要打包，Maven就提供了一个打包插件提供我们使用等。最终会有很多插件（Maven已经写好了）来帮我们做好项目最终需要的东西。
 
 <img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20220128231341598.png" alt="image-20220128231341598" style="zoom:80%;" />
 
-==模型==然后上图中紫色框起来的部分，项目对象模型就是将我们自己这个项目抽象成一个对象模型，有自己专属的坐标，如下图所示是一个Maven项目：
+**模型** 然后上图中紫色框起来的部分，项目对象模型就是将我们自己这个项目抽象成一个对象模型，有自己专属的坐标，如下图所示是一个Maven项目：
 
 <img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20220128231409802.png" alt="image-20220128231409802" style="zoom:80%;" />
 
@@ -119,8 +119,8 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 ### 2.3 坐标
 
-* Maven 中的坐标是==仓库里面资源的唯一标识==
-* ==我们使用坐标来定义项目或引入项目中需要的依赖==
+* Maven 中的坐标是**仓库里面资源的唯一标识**
+* **我们使用坐标来定义项目或引入项目中需要的依赖**
 
 **Maven 坐标主要组成**
 
@@ -137,9 +137,55 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 ### 2.4 Maven的安装—MAC
 
+1、打开Maven的官网下载安装；
+
+[Maven – Download Apache Maven](https://maven.apache.org/download.cgi)
+
+<img src="images/image-20230621192442540.png" alt="image-20230621192442540" style="zoom: 50%;" />
+
+安装解压完了之后会有一个maven的文件夹，其中bin为可执行文件
+
+<img src="images/image-20230621192601248.png" alt="image-20230621192601248" style="zoom:50%;" />
 
 
 
+2、添加maven的bin文件目录到环境变量里面去；
+
+ 1. 进入到当前用户的home目录
+
+    ```shell
+    cd ~
+    ```
+
+ 2. 创建.bash_profile（如果已经存在就不用创建了）
+
+    ```sh
+    touch .bash_profile
+    ```
+
+ 3. 编辑该文件，加上maven的bin的环境变量
+
+    ```sh
+    vim ~/.bash_profile 
+    # 加入下面一行（引号内容按照自己的maven安装路径修改）
+    export PATH=$PATH:"/Users/zhoudas/Desktop/Java/apache-maven-3.9.2/bin"
+    ```
+
+ 4. 更新环境变量配置文件；
+
+    ```sh
+     source ~/.bash_profile
+    ```
+
+ 5. 检查是否配置成功
+
+    ```sh
+    mvn -v 
+    ```
+
+    <img src="images/image-20230621193152283.png" alt="image-20230621193152283" style="zoom:50%;" />
+
+    
 
 ### 2.5 Maven的基本使用
 
@@ -157,9 +203,9 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 **环境准备：**
 
-提供了一个使用Maven构建的项目，项目结构如下：
+提供了一个Maven构建的项目，项目结构如下：
 
-<img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20210726170404545.png" alt="image-20210726170404545" style="zoom:70%;" />
+<img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20210726170404545.png" alt="image-20210726170404545" style="zoom: 50%;" />
 
 而我们使用上面命令需要在磁盘上进入到项目的 `pom.xml` 目录下，打开命令提示符
 
@@ -567,7 +613,205 @@ Maven提供的解决方案如下：
 
 
 
+# 分模块开发
 
+
+
+[Maven高级：分模块开发_maven分模块开发_黑马程序员官方的博客-CSDN博客](https://blog.csdn.net/itcast_cn/article/details/125188149)
+
+所有用Maven管理的真实的项目都应该是分模块的，每个模块都对应着一个`pom.xml`。它们之间通过继承和聚合（也称作多模块，multi-module）相互关联。那么，为什么要这么做呢？我们明明在开发一个项目，划分模块后，导入Eclipse变成了N个项目，这会带来复杂度，给开发带来不便。
+
+为了解释原因，假设有这样一个项目，很常见的Java Web应用。在这个应用中，我们分了几层：
+
+- Dao层负责数据库交互，封装了Hibernate交互的类。
+- Service层处理业务逻辑，放一些Service接口和实现相关的Bean。
+- Web层负责与客户端交互，主要有一些Structs的Action类。
+
+对应的，在一个项目中，我们会看到一些包名：
+
+- `org.myorg.app.dao`
+- `org.myorg.app.service`
+- `org.myorg.app.web`
+- `org.myorg.app.util`
+
+这样整个项目的框架就清晰了，但随着项目的进行，你可能会遇到如下问题：
+这个应用可能需要有一个前台和一个后台管理端（web或者swing），你发现大部分dao，一些service，和大部分util是在两个应用中可用的。这样的问题，你一周内遇到了好几次。
+`pom.xml`中的依赖列表越来越长以重用的，但是，由于目前只有一个项目（WAR），你不得不新建一个项目依赖这个WAR，这变得非常的恶心，因为在Maven中配置对WAR的依赖远不如依赖JAR那样简单明了，而且你根本不需要`org.myorg.app.web`。有人修改了dao，提交到svn并且不小心导致build失败了，你在编写service的代码，发现编译不过，只能等那人把dao修复了，你才能继续进行，很多人都在修改，到后来你根本就不清楚哪个依赖是谁需要的，渐渐的，很多不必要的依赖被引入。甚至出现了一个依赖有多个版本存在。
+build整个项目的时间越来越长，尽管你只是一直在web层工作，但你不得不build整个项目。
+某个模块，比如util，你只想让一些经验丰富的人来维护，可是，现在这种情况，每个开发者都能修改，这导致关键模块的代码质量不能达到你的要求。
+我们会发现，其实这里实际上没有遵守一个设计模式原则：“高内聚，低耦合”。虽然我们通过包名划分了层次，并且你还会说，这些包的依赖都是单向的，没有包的环依赖。这很好，但还不够，因为就构建层次来说，所有东西都被耦合在一起了。因此我们需要使用Maven划分模块。
+
+一个简单的Maven模块结构是这样的：
+
+```java
+ 1---- app-parent
+ 2|-- pom.xml (pom)
+ 3|
+ 4|-- app-util
+ 5|        |-- pom.xml (jar)
+ 6|
+ 7|-- app-dao
+ 8|        |-- pom.xml (jar)
+ 9|
+10|-- app-service
+11|        |-- pom.xml (jar)
+12|
+13|-- app-web
+14|-- pom.xml (war)
+```
+
+上述简单示意图中，有一个父项目(app-parent)聚合很多子项目（app-util, app-dao, app-service, app-web）。每个项目，不管是父子，都含有一个`pom.xml`文件。而且要注意的是，小括号中标出了每个项目的打包类型。父项目是pom,也只能是pom。子项目有jar，或者war。根据它包含的内容具体考虑。
+
+这些模块的依赖关系如下：
+
+```java
+1app-dao      --> app-util
+2app-service  --> app-dao
+3app-web      --> app-service
+```
+
+注意依赖的传递性（大部分情况是传递的，除非你配置了特殊的依赖scope），app-dao依赖于app-util，app-service依赖于app-dao，于是app-service也依赖于app-util。同理，app-web依赖于app-dao,app-util。
+
+用**项目层次的划分**替**代包层次的划分**能给我们带来如下好处：
+
+- 方便重用，如果你有一个新的swing项目需要用到app-dao和app-service，添加对它们的依赖即可，你不再需要去依赖一个WAR。而有些模块，如app-util，完全可以渐渐进化成公司的一份基础工具类库，供所有项目使用。这是模块化最重要的一个目的。
+- 由于你现在划分了模块，每个模块的配置都在各自的`pom.xml`里，不用再到一个混乱的纷繁复杂的总的POM中寻找自己的配置。
+- 如果你只是在app-dao上工作，你不再需要build整个项目，只要在app-dao目录运行`mvn`命令进行build即可，这样可以节省时间，尤其是当项目越来越复杂，build越来越耗时后。
+- 某些模块，如app-util被所有人依赖，但你不想给所有人修改，现在你完全可以从这个项目结构出来，做成另外一个项目，svn只给特定的人访问，但仍提供jar给别人使用。
+- 多模块的Maven项目结构支持一些Maven的更有趣的特性（如`DepencencyManagement`），这留作以后讨论。
+- 接下来讨论一下POM配置细节，实际上非常简单，先看app-parent的`pom.xml`：
+
+```xml
+ 1<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ 2xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+ 3<modelVersion>4.0.0</modelVersion>
+ 4<groupId>org.myorg.myapp</groupId>
+ 5<artifactId>app-parent</artifactId>
+ 6<packaging>pom</packaging>
+ 7<version>1.0-SNAPSHOT</version>
+ 8<modules>
+ 9    <module>app-util</module>
+10    <module>app-dao</module>
+11    <module>app-service</module>
+12    <module>app-web</module>
+13</modules>
+14</project>
+```
+
+Maven的坐标GAV（`groupId`, `artifactId`, `version`）在这里进行配置，这些都是必须的。特殊的地方在于，这里的`packaging`为`pom`。所有带有子模块的项目的`packaging`都为`pom`。`packaging`如果不进行配置，它的默认值是`jar`，代表Maven会将项目打成一个jar包。
+该配置重要的地方在于modules，例子中包含的子模块有app-util, app-dao, app-service, app-war。在Maven build app-parent的时候，它会根据子模块的相互依赖关系整理一个build顺序，然后依次build。
+这就是一个父模块大概需要的配置，接下来看一下子模块符合配置继承父模块。
+
+```xml
+ 1<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ 2xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+ 3<parent>
+ 4<artifactId>app-parent</artifactId>
+ 5<groupId>org.myorg.myapp</groupId>
+ 6<version>1.0-SNAPSHOT</version>
+ 7</parent>
+ 8<modelVersion>4.0.0</modelVersion>
+ 9<artifactId>app-util</artifactId>
+10<dependencies>
+11    <dependency>
+12        <groupId>commons-lang</groupId>
+13        <artifactId>commons-lang</artifactId>
+14        <version>2.4</version>
+15   </dependency>
+16</dependencies>
+17</project>
+```
+
+app-util模块继承了app-parent父模块，因此这个POM的一开始就声明了对app-parent的引用，该引用是通过Maven坐标GAV实现的。而关于项目app-util本身，它却没有声明完整GAV，这里我们只看到了artifactId。这个POM并没有错，groupId和version默认从父模块继承了。实际上子模块从父模块继承一切东西，包括依赖，插件配置等等。
+此外app-util配置了一个对于commons-lang的简单依赖，这是最简单的依赖配置形式。大部分情况，也是通过GAV引用的。
+再看一下app-dao，它也是继承于app-parent，同时依赖于app-util：
+
+```xml
+ 1<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ 2xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+ 3<parent>
+ 4<artifactId>app-parent</artifactId>
+ 5<groupId>org.myorg.myapp</groupId>
+ 6<version>1.0-SNAPSHOT</version>
+ 7</parent>
+ 8<modelVersion>4.0.0</modelVersion>
+ 9<artifactId>app-dao</artifactId>
+10<dependencies>
+11       <dependency>
+12         <groupId>org.myorg.myapp</groupId>
+13         <artifactId>app-util</artifactId>
+14         <version>${project.version}</version>
+15    </dependency>
+16</dependencies>
+17</project>
+```
+
+该配置和app-util的配置几乎没什么差别，不同的地方在于，依赖变化了，app-dao依赖于app-util。这里要注意的是version的值为`${project.version}`，这个值是一个属性引用，指向了POM的project/version的值，也就是这个POM对应的version。由于app-dao的version继承于app-parent，因此它的值就是`1.0-SNAPSHOT`。而`app-util`也继承了这个值，因此在所有这些项目中，我们做到了保持版本一致。
+这里还需要注意的是，app-dao依赖于app-util，而app-util又依赖于commons-lang，根据传递性，app-dao也拥有了对于commons-lang的依赖。
+app-service我们跳过不谈，它依赖于app-dao。我们最后看一下app-web：
+
+```xml
+ 1<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ 2xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+ 3<parent>
+ 4<artifactId>app-parent</artifactId>
+ 5<groupId>org.myorg.myapp</groupId>
+ 6<version>1.0-SNAPSHOT</version>
+ 7</parent>
+ 8<modelVersion>4.0.0</modelVersion>
+ 9<artifactId>app-web</artifactId>
+10<packaging>war</packaging>
+11<dependencies>
+12    <dependency>
+13        <groupId>org.myorg.myapp</groupId>
+14        <artifactId>app-service</artifactId>
+15        <version>${project.version}</version>
+16    </dependency>
+17</dependencies>
+18</project>
+```
+
+app-web依赖于app-service，因此配置了对其的依赖。
+由于app-web是我们最终要部署的应用，因此它的packaging是war。为此，你需要有一个目录`src/main/webapp`。并在这个目录下拥有web应用需要的文件，如`/WEB-INF/web.xml`。没有web.xml，Maven会报告build失败，此外你可能还会有这样一些子目录：/js, /img, /css … 。
+
+看看Maven是如何build整个项目的，我们在 app-parent 根目录中运行 `mvn clean install` ，输出的末尾会有大致这样的内容：
+
+```java
+ 1...
+ 2...
+ 3[INFO] [war:war]
+ 4[INFO] Packaging webapp
+ 5[INFO] Assembling webapp[app-web] in [/home/juven/workspaces/ws-others/myapp/app-web/target/app-web-1.0-SNAPSHOT]
+ 6[INFO] Processing war project
+ 7[INFO] Webapp assembled in[50 msecs]
+ 8[INFO] Building war: /home/juven/workspaces/ws-others/myapp/app-web/target/app-web-1.0-SNAPSHOT.war
+ 9[INFO] [install:install]
+10[INFO] Installing /home/juven/workspaces/ws-others/myapp/app-web/target/app-web-1.0-SNAPSHOT.war to /home/juven/.m2/repository/org/myorg/myapp/app-web/1.0-SNAPSHOT/app-web-1.0-SNAPSHOT.war
+11[INFO]
+12[INFO]
+13[INFO] ------------------------------------------------------------------------
+14[INFO] Reactor Summary:
+15[INFO] ------------------------------------------------------------------------
+16[INFO] app-parent ............................................ SUCCESS [1.191s]
+17[INFO] app-util .............................................. SUCCESS [1.274s]
+18[INFO] app-dao ............................................... SUCCESS [0.583s]
+19[INFO] app-service ........................................... SUCCESS [0.593s]
+20[INFO] app-web ............................................... SUCCESS [0.976s]
+21[INFO] ------------------------------------------------------------------------
+22[INFO] ------------------------------------------------------------------------
+23[INFO] BUILD SUCCESSFUL
+24[INFO] ------------------------------------------------------------------------
+25[INFO] Total time: 4 seconds
+26[INFO] Finished at: Sat Dec 27 08:20:18 PST 2008
+27[INFO] Final Memory: 3M/17M
+28[INFO] ------------------------------------------------------------------------
+```
+
+注意Reactor Summary，整个项目根据我们希望的顺序进行build。Maven根据我们的依赖配置，智能的安排了顺序，app-util, app-dao, app-service, app-web。
+
+最后，你可以在 `app-web/target` 目录下找到文件 `app-web-1.0-SNAPSHOT.war` ，打开这个war包，在 `/WEB-INF/lib` 目录看到了 commons-lang-2.4.jar，以及对应的app-util, app-dao, app-service 的jar包。Maven自动帮你处理了打包的事情，并且根据你的依赖配置帮你引入了相应的jar文件。
+
+使用多模块的Maven配置，可以帮助项目划分模块，鼓励重用，防止POM变得过于庞大，方便某个模块的构建，而不用每次都构建整个项目，并且使得针对某个模块的特殊控制更为方便。本文同时给出了一个实际的配置样例，展示了如何使用Maven配置多模块项目。
 
 
 
