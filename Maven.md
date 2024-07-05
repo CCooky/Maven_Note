@@ -14,7 +14,7 @@
 
 - 还有很多很多其他的.........
 
-## 1. 使用Maven的好处
+## 使用Maven的好处
 
 Maven是专门用于管理和构建Java项目的工具，它的主要功能有：
 
@@ -50,7 +50,7 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 <img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20210726154922337.png" alt="image-20210726154922337" style="zoom:80%;" />
 
-如上图右边所示就是mysql驱动包的坐标，在项目中只需要写这段配置，其他都不需要我们担心，Maven都帮我们进行操作了，他会自己去我们设置的网站下载
+如上图右边所示就是mysql驱动包的坐标，在项目中只需要写这段配置，其他都不需要我们担心，Maven都帮我们进行操作了，他会自己去我们设置的网站下
 
 市面上有很多构建工具，而Maven依旧还是主流构建工具，如下图是常用构建工具的使用占比
 
@@ -63,6 +63,10 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 > 官网 ：http://maven.apache.org/ 
 
 通过上面的描述大家只需要知道Maven是一个工具即可。Apache 是一个开源组织，将来我们会学习很多Apache提供的项目。
+
+**他是一个单独的工具/软件，与Java是单独分开的东西哦**
+
+
 
 ### 2.1 Maven模型
 
@@ -137,19 +141,34 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
 
 ### 2.4 Maven的安装—MAC
 
-1、打开Maven的官网下载安装；
+**他是一个单独的工具/软件，与Java是单独分开的东西哦**
+
+官网下载二进制压缩包、开箱即用，然后配置环境变量、配置本地仓库路径和私服仓库路径，最后IDEA绑定Maven设置即可使用了
+
+
+
+**1、打开Maven的官网下载安装；**
 
 [Maven – Download Apache Maven](https://maven.apache.org/download.cgi)
 
-<img src="images/image-20230621192442540.png" alt="image-20230621192442540" style="zoom: 50%;" />
+<img src="images/image-20230621192442540-17201610580032.png" alt="image-20230621192442540" style="zoom: 50%;" />
 
-安装解压完了之后会有一个maven的文件夹，其中bin为可执行文件
+> Binary是可执行版本，已经编译好可以直接使用。
+> Source是源代码版本，需要自己编译成可执行软件才可使用。
 
-<img src="images/image-20230621192601248.png" alt="image-20230621192601248" style="zoom:50%;" />
+> tar.gz和zip两种压缩格式,其实这两个压缩文件里面包含的内容是同样的,只是压缩格式不同
+> tar.gz格式的文件比zip文件小很多,用于unix操作系统。
+> zip格式用于Windows操作系统,但在Windows系统使用WinRar工具一样能够解压缩tar.gz格式
+
+安装解压完了之后会有一个maven的文件夹，其中bin为可执行文件。
+
+<img src="images/image-20230621192601248-17201610580031.png" alt="image-20230621192601248" style="zoom:50%;" />
+
+<img src="images/image-20240705141622221.png" alt="image-20240705141622221" style="zoom:80%;" />
 
 
 
-2、添加maven的bin文件目录到环境变量里面去；
+**2、添加maven的bin文件目录到环境变量里面去；**
 
  1. 进入到当前用户的home目录
 
@@ -183,9 +202,60 @@ Maven是专门用于管理和构建Java项目的工具，它的主要功能有�
     mvn -v 
     ```
 
-    <img src="images/image-20230621193152283.png" alt="image-20230621193152283" style="zoom:50%;" />
+    <img src="images/image-20230621193152283-17201610580033.png" alt="image-20230621193152283" style="zoom:50%;" />
 
-    
+**3、配置本地仓库+私服仓库**
+
+​	其实就是修改conf里面的setting.xml配置文件内容。如果公司有的话，直接覆盖这个配置文件就行了。
+
+​	<img src="images/image-20240705141725814.png" alt="image-20240705141725814" style="zoom:80%;" />
+
+​	1、在E:\Tools\Maven\路径下新建maven-repository文件夹，用作maven的本地库。
+
+<img src="images/image-20240705142318499.png" alt="image-20240705142318499" style="zoom:80%;" />
+
+​	2、在路径E:\Tools\Maven\apache-maven-3.8.1\conf下找到settings.xml文件
+
+<img src="images/image-20240705142255542.png" alt="image-20240705142255542" style="zoom:80%;" />
+
+​	3、找到节点localRepository，在注释外添加 
+
+- ```java
+  <localRepository>E:\Tools\Maven\maven-repository</localRepository>
+  ```
+
+  <img src="images/image-20240705142038405.png" alt="image-20240705142038405" style="zoom:80%;" />
+
+
+
+​	4、配置私服仓库，找到mirrors节点
+
+<img src="images/image-20240705142148168.png" alt="image-20240705142148168" style="zoom:80%;" />
+
+
+
+### 2.5 Win安装
+
+也是分为五步步、除了环境变量配置不用外，其他的都一样。Win中环境变量均采用 **Path+XXX_HOME**的形式。
+
+
+
+**补充环境变量注意点：**
+
+Maven是用java写的，它是需要配置Java的运行环境的，这个是在bin下面的mvn.cmd里面，打开你会发现这些东西：
+
+- 也就是说，我们前面配置的Java环境变量，一定要起名规范哦，不然Maven会无法识别。
+- Maven的环境变量起码也是要规范！！！
+
+![img](images/wps1.jpg) 
+
+![img](images/wps2.jpg) 
+
+
+
+
+
+
 
 ### 2.5 Maven的基本使用
 
@@ -339,6 +409,10 @@ Maven 对项目构建的生命周期划分为3套：
 ## 3. IDEA使用Maven
 
 ### 3.1 创建Maven
+
+回顾项目结构：Java项目和Web项目区别就在于 webapp那个目录的有无。
+
+<img src="https://java-baguwen.oss-cn-chengdu.aliyuncs.com/images/image-20210726153815028.png" alt="image-20210726153815028" style="zoom:80%;" />
 
 #### 3.1.1 直接创建java项目
 
