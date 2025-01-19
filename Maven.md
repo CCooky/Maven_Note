@@ -772,7 +772,7 @@ build整个项目的时间越来越长，尽管你只是一直在web层工作，
 14</project>
 ```
 
-Maven的坐标GAV（`groupId`, `artifactId`, `version`）在这里进行配置，这些都是必须的。特殊的地方在于，这里的`packaging`为`pom`。所有带有子模块的项目的`packaging`都为`pom`。`packaging`如果不进行配置，它的默认值是`jar`，代表Maven会将项目打成一个jar包。
+Maven的坐标GAV（`groupId`, `artifactId`, `version`）在这里进行配置，这些都是必须的。**特殊的地方在于，这里的`packaging`为`pom`。所有带有子模块的项目的`packaging`都为`pom`。**`packaging`如果不进行配置，它的默认值是`jar`，代表Maven会将项目打成一个jar包。
 该配置重要的地方在于modules，例子中包含的子模块有app-util, app-dao, app-service, app-war。在Maven build app-parent的时候，它会根据子模块的相互依赖关系整理一个build顺序，然后依次build。
 这就是一个父模块大概需要的配置，接下来看一下子模块符合配置继承父模块。
 
