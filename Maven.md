@@ -889,7 +889,41 @@ app-web依赖于app-service，因此配置了对其的依赖。
 
 
 
+# 多模块
+
+## 说明
+
+<img src="images/image-20250423161115036.png" alt="image-20250423161115036" style="zoom: 67%;" />
+
+作为一个 Maven 多模块项目的根 pom.xml（打包方式为 pom），它引入的依赖处理规则如下：
+
+1. **默认情况下会传递**：
+
+   - 根 pom 中定义的依赖默认会传递给子模块
+   - 子模块会继承父 pom 中的依赖管理和依赖声明
+
+2. **依赖传递的方式**：
+
+   <img src="images/image-20250423161900117.png" alt="image-20250423161900117" style="zoom:50%;" />
+   
+3. **重要区别**：
+
+   - `<dependencies>` 中的依赖会自动传递给所有子模块
+   - `<dependencyManagement>` 中的依赖不会自动传递，只是管理版本号
+   - 子模块需要显式声明才会使用 `<dependencyManagement>` 中定义的依赖
+
+4. **最佳实践**：
+
+   - 建议在根 pom 中使用 `<dependencyManagement>` 来统一管理依赖版本
+   - 只将公共的、所有子模块都需要的依赖放在根 pom 的 `<dependencies>` 中
+   - 特定模块的依赖应该在各自的 pom.xml 中声明
 
 
 
+## 范例
 
+<img src="images/image-20250423161539459.png" alt="image-20250423161539459" style="zoom:50%;" />
+
+<img src="images/image-20250423161626251.png" alt="image-20250423161626251" style="zoom:50%;" />
+
+<img src="images/image-20250423161810179.png" alt="image-20250423161810179" style="zoom:50%;" />
