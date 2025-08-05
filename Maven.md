@@ -1397,7 +1397,7 @@ mvn help:effective-pom -pl goods_center_business | grep -A 3 -B 3 goods_client_c
 
 ## 总结
 
-1. Maven会按照pom文件中的依赖顺序依次编译模块。
+1. **Maven会按照pom文件中的依赖顺序依次编译模块。**
 
    <modules>
      <module>goods_client_common</module> <!-- 1. 先构建 -->
@@ -1406,17 +1406,35 @@ mvn help:effective-pom -pl goods_center_business | grep -A 3 -B 3 goods_client_c
      <module>goods_center_service</module> <!-- 4. 最后构建，使用最新的client包 -->
    </modules>
 
-2. 在编译某个模块时，如果他依赖的 “jar包+版本” 在本地已存在，则不会去仓库拉取对应版本的代码，根据reactor机制全部使用内存最新的版本。所以说你本地改了版本进行编译时，无需发布api到仓库也可以编译成功，包括部署服务器。
+2. **在编译某个模块时，如果他依赖的 “jar包+版本” 在本地已存在，**则不会去仓库拉取对应版本的代码，根据reactor机制全部使用内存最新的版本。所以说你本地改了版本进行编译时，无需发布api到仓库也可以编译成功，包括部署服务器。
 
    <img src="images/image-20250805174318054.png" alt="image-20250805174318054" style="zoom: 33%;" />
 
-3. dependency:tree 是"查询工具"，他是从拉取的maven仓库分析的，而不是实际编译结果，这里会忽略Reactor机制。
+3. **dependency:tree 是"查询工具"，他是从拉取的maven仓库分析的，而不是实际编译结果，这里会忽略Reactor机制。**
 
    想要看实际编译后依赖的版本：mvn help:effective-pom -pl goods_center_business | grep -A 3 -B 3 goods_client_common
 
-   <img src="images/image-20250805192236408.png" alt="image-20250805192236408" style="zoom:50%;" />
+   <img src="images/image-20250805192236408.png" alt="image-20250805192236408" style="zoom: 33%;" />
+   
+   查看依赖树：mvn dependency:tree -pl goods_center_business 2>/dev/null | grep -E "^\[INFO\].*goods_.*:" | head -10
+   
+   <img src="images/image-20250805194845144.png" alt="image-20250805194845144" style="zoom: 33%;" />
 
+4. **只修改com包的版本并发布到maven仓库，其他两个client修改依赖com包本本，但不发布两个client的包到仓库。**
 
+   对于服务自身没有影响，部署上线都没问题，也可以找到最新com包-1.0.7的字段，因为Reactor机制，但依赖树分析是老版本的com包。
+
+   对于三方服务，只依赖query-client包，他由于不是本地reactor机制，所以它会拿到老版本的common包-1.0.6，会显得非常奇怪.........
+
+   你的本地服务能正常运行，是因为Maven的Reactor机制确保了模块间使用最新的本地构建版本。但这不代表外部项目也能获得你的最新修改。
+
+   如果你只改了 goods_client_common：
+
+   - ✅ 本地运行：没问题，使用最新代码
+
+   - ❌ 外部使用者：仍然使用旧版本的common包，无法获得你的修改
+
+   所以还是建议按照之前的方案：先发布common包，再更新并发布两个client包。
 
 
 
