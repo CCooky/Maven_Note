@@ -889,7 +889,7 @@ app-web依赖于app-service，因此配置了对其的依赖。
 
 
 
-# 多模块
+# 多模块依赖传递
 
 ## 说明
 
@@ -927,3 +927,496 @@ app-web依赖于app-service，因此配置了对其的依赖。
 <img src="images/image-20250423161626251.png" alt="image-20250423161626251" style="zoom:50%;" />
 
 <img src="images/image-20250423161810179.png" alt="image-20250423161810179" style="zoom:50%;" />
+
+# 多模块依赖版本拉取顺序
+
+## 1. 背景
+
+> 涉及到Maven自身的Reactor机制以及三方仓库依赖拉取冲突的处理
+
+遇到一个实际的项目问题：该服务的api模块分了三层，queryclient+manageclient+commonclient，三方服务依赖两个查询和管理的client，而查&改的client依赖于这个comclient，且三个模块均会发布到maven仓库中，维护了三个版本。
+
+> 思考：comclient是不是不需要发布到maven仓库中？
+>
+> 1. 不单独发布的话，那两个client就需要各自维护一个comclient里面的类，也可以啊感觉，这样好一点，但就是名字是一样的，内部用起来容易改漏、用错。所以单独起一个maven也还行。
+> 2. 核心感觉是不应该在API层分管理端和查询端啊，api是同一个，服务内部进行区分就行了，怎么会想到在api层分呢，有点无语，API层分的话，三个jar包版本很难统一，而且当comon变化时，三个jar都要重新发。
+
+我们先看一下现状：
+
+```xml
+# 根pom
+<goods_query_client.version>1.2.13</goods_query_client.version>
+<goods_manage_client.version>1.0.4</goods_manage_client.version>
+<goods_client_common.version>1.0.7</goods_client_common.version>
+
+# goods_manage_client pom文件
+<dependency>
+    <groupId>com.meituan.shangou.goodscenter</groupId>
+    <artifactId>goods_client_common</artifactId>
+    <version>${goods_client_common.version}${version.type}</version>
+</dependency>
+
+# goods_query_client pom文件
+<dependency>
+    <groupId>com.meituan.shangou.goodscenter</groupId>
+    <artifactId>goods_client_common</artifactId>
+    <version>${goods_client_common.version}${version.type}</version>
+</dependency>
+```
+
+maven仓库有三个jar包：goods_query_client、goods_manage_client、goods_client_common，其他项目只引入goods_query_client和goods_manage_client。
+
+<img src="images/image-20250805171623840.png" alt="image-20250805171623840" style="zoom: 33%;" />
+
+**依赖关系分析**
+
+1. 包结构和职责
+
+- goods_client_common (v1.0.7): 基础公共包
+
+  - 包含：dto、request、response、enums、constants
+
+  - 作用：提供所有客户端共用的数据传输对象和基础类
+
+- goods_center_client (v1.2.13): 查询客户端包
+
+  - 包含：thrift接口、query相关功能
+
+  - 依赖：goods_client_common
+
+- goods_manage_client (v1.0.4): 管理客户端包
+
+  - 包含：manage管理相关接口
+
+  - 依赖：goods_client_common
+
+2. 依赖关系
+
+```tex
+goods_client_common (基础层)
+  ↑
+  ├── goods_center_client (查询客户端)
+  └── goods_manage_client (管理客户端)
+```
+
+从pom文件可以看出：
+
+- goods_center_client 和 goods_manage_client 都直接依赖 goods_client_common
+
+- 三个包都会发布到Maven仓库供外部使用
+
+## Q1:只修改comclient，需要发布其他两个jar包吗？
+
+如果你只改了common包的内容，需要这样处理：
+
+1. 必须发布 goods_client_common: 因为它是基础依赖包，其他两个client都依赖它
+
+2. 需要更新另外两个client:
+
+   - 更新它们pom文件中对goods_client_common的版本依赖
+
+   - 重新发布goods_center_client和goods_manage_client
+
+3. 发布顺序
+
+   ```tex
+   1. 先发布 goods_client_common (新版本)
+   2. 更新并发布 goods_center_client 
+   3. 更新并发布 goods_manage_client
+   ```
+
+实际操作建议
+
+1. 版本更新：将goods_client_common.version从1.0.7升级到1.0.8
+2. 同步更新：其他两个client的pom中也要更新对common包的版本引用
+3. 一起发布：建议三个包一起发布，保持版本一致性
+
+这种设计是典型的分层架构模式，common包提供基础能力，避免重复代码，而两个client包提供不同的业务功能。
+
+
+
+## Q2: 其他两个client如果不发布到maven仓库呢，会有什么问题，我自己这个服务好像可以成功运行
+
+![image-20250805172326283](images/image-20250805172326283.png)
+
+**为什么你的服务可以正常运行？**
+
+你的服务能正常运行是因为：
+
+1. 内部依赖解析：你的项目内部模块之间使用的是本地依赖，不是从Maven仓库拉取的
+2. 本地构建：当你本地构建时，Maven会使用项目内的最新代码，包括你对goods_client_common的修改
+3. 传递性依赖：即使client包版本没变，它们会自动使用项目内最新的common包
+
+**如果不发布另外两个client包会有什么问题？**
+
+1. 对外部使用者的影响
+
+   ```tex
+   外部项目依赖链：
+   外部项目 → Maven仓库中的client包 → Maven仓库中的旧版本common包
+   ```
+
+   问题：
+
+   - 外部项目仍然会使用旧版本的goods_client_common(1.0.7)
+
+   - 无法获得你在common包中的新功能或bug修复
+
+   - 可能出现版本不一致导致的兼容性问题
+
+2. 具体场景分析
+
+   假设你在goods_client_common中：
+
+   - 修改了某个DTO的字段
+
+   - 添加了新的枚举值
+
+   - 修复了某个工具类的bug
+
+   如果只发布common包：
+
+   ```tex
+   ✅ 你的服务：使用最新的common包 (1.0.8)
+   ❌ 外部项目：
+     \- 使用goods_center_client (1.2.13) 
+     \- 但client内部依赖的还是goods_client_common (1.0.7)
+     \- 无法获得你的修改
+   ```
+
+3. 最佳实践建议
+
+   1. 完整发布：建议三个包一起发布，保持版本一致性
+
+   1. 版本策略
+
+      ```tex
+      goods_client_common: 1.0.7 → 1.0.8
+      goods_center_client: 1.2.13 → 1.2.14 
+      goods_manage_client: 1.0.4 → 1.0.5
+      ```
+
+   3. 发布顺序
+
+      ```tex
+      1. 发布 goods_client_common (1.0.8)
+      2. 更新并发布 goods_center_client (1.2.14)
+      3. 更新并发布 goods_manage_client (1.0.5)
+      ```
+
+## Q3:maven获取包的顺序是啥？你说的本地会拉取最新包是为什么呢？和模块编译顺序有关吗？
+
+![image-20250805172853552](images/image-20250805172853552.png)
+
+<img src="images/image-20250805172919675.png" alt="image-20250805172919675" style="zoom:50%;" />
+
+非常好的问题！现在我来详细解释Maven获取包的顺序和为什么你的服务能正常运行：
+
+Maven解析依赖的优先级顺序是：
+
+1. 本地仓库 (~/.m2/repository)
+2. 中央仓库或配置的远程仓库
+3. 项目内模块依赖（reactor模块）
+
+**关键发现**
+
+从依赖树输出中我看到了一个重要信息：
+
+```tex
+[INFO] | +- com.meituan.shangou.goodscenter:goods_client_common:jar:1.0.6:compile
+```
+
+这说明 goods_center_service 实际获取到的是 goods_client_common:1.0.6，而不是你项目中定义的 1.0.7！,他是只引入了goods_center_client。
+
+**为什么你的服务能正常运行？**
+
+1. 多模块项目的特殊机制
+
+   在Maven多模块项目中，当你执行 mvn compile 或 mvn package 时：
+
+   - Maven会按照模块定义的顺序构建
+
+   - **Reactor机制：**如果模块间有依赖关系，Maven会使用当前构建中的模块，而不是从仓库下载
+
+2. 模块编译顺序
+
+   你的根pom中模块顺序是：
+
+   ```xml
+   <modules>
+     <module>goods_client_common</module> <!-- 1. 先构建 -->
+     <module>goods_center_client</module> <!-- 2. 然后构建这个，会使用刚构建的common -->
+     <module>goods_manage_client</module> <!-- 3. 同样使用最新的common -->
+     <module>goods_center_service</module> <!-- 4. 最后构建，使用最新的client包 -->
+   </modules>
+   ```
+
+3. 本地vs远程的混合使用
+
+实际情况是：
+
+- 本地开发：Maven使用reactor机制，所有模块都用最新的本地代码
+
+- 依赖显示：可能显示的是仓库中的版本，但实际使用的是本地构建的版本
+
+<img src="images/image-20250805173420384.png" alt="image-20250805173420384" style="zoom:50%;" />
+
+### 总结回答
+
+**Maven获取包的顺序：**
+
+1. 本地仓库 (~/.m2/repository)
+2. 远程仓库（如你配置的美团内部仓库）
+3. 多模块项目特殊处理：Reactor机制
+
+**你的服务能正常运行的原因：**
+
+1. Reactor构建机制：
+
+   - 在多模块项目中，Maven会按顺序构建模块
+
+   - 后续模块会使用前面刚构建完成的模块，而不是从仓库下载
+
+2. 模块编译顺序影响
+
+   ```tex
+     goods_client_common (1.0.7) 
+     ↓ 本地构建完成
+     goods_center_client 依赖最新的 common
+     ↓ 本地构建完成 
+     goods_center_service 依赖最新的 client
+   ```
+
+3. 版本显示vs实际使用：
+   - dependency:tree 可能显示仓库中的版本号
+   - 但实际运行时使用的是本地构建的最新代码
+
+**核心答案：**
+
+你的本地服务能正常运行，是因为Maven的Reactor机制确保了模块间使用最新的本地构建版本。但这不代表外部项目也能获得你的最新修改。
+
+如果你只改了 goods_client_common：
+
+- ✅ 本地运行：没问题，使用最新代码
+
+- ❌ 外部使用者：仍然使用旧版本的common包，无法获得你的修改
+
+所以还是建议按照之前的方案：先发布common包，再更新并发布两个client包。
+
+
+
+## Q4:Maven的Reactor机制这个是啥？
+
+好问题！让我详细解释一下Maven的Reactor机制，这是理解多模块项目构建的核心概念。
+
+<img src="images/image-20250805173904895.png" alt="image-20250805173904895" style="zoom: 33%;" />
+
+### 1. 什么是Reactor？
+
+Maven Reactor是Maven多模块项目的构建引擎，负责：
+
+- 依赖分析：分析模块间的依赖关系
+
+- 构建排序：确定正确的构建顺序
+
+- 内存共享：让后续模块使用前面模块的构建结果
+
+### 2. Reactor vs 传统依赖解析
+
+让我用一个简单的例子说明：
+
+<img src="images/image-20250805174012260.png" alt="image-20250805174012260" style="zoom:50%;" />
+
+<img src="images/image-20250805174029958.png" alt="image-20250805174029958" style="zoom:50%;" />
+
+完美！现在让我创建一个更详细的图来解释Reactor机制：
+
+<img src="images/image-20250805174105331.png" alt="image-20250805174105331" style="zoom:50%;" />
+
+### 3. Reactor机制的核心特性
+
+#### 1. 智能依赖分析
+
+Reactor会自动分析模块间的依赖关系：
+
+```tex
+goods_center_service → goods_center_client → goods_client_common
+goods_center_service → goods_manage_client → goods_client_common
+```
+
+#### 2. 构建顺序优化
+
+从你的构建日志可以看出，Maven自动确定了最优的构建顺序：
+
+- goods_client_common (2/8) - 最先构建，因为其他模块都依赖它
+
+- goods_center_client (3/8) - 然后构建，依赖common
+
+- goods_manage_client (4/8) - 同样依赖common
+
+- goods_center_service (6/8) - 后面构建，依赖前面的client包
+
+#### 3. 内存中的依赖共享
+
+这是Reactor最神奇的地方：
+
+```java
+// 当 goods_center_client 需要 goods_client_common 时
+// Reactor不会去Maven仓库下载
+// 而是直接使用刚刚在内存中构建完成的 goods_client_common
+```
+
+#### 4. 为什么你的服务能正常运行？
+
+<img src="images/image-20250805174318054.png" alt="image-20250805174318054" style="zoom:50%;" />
+
+#### 5. Reactor vs 外部项目的对比
+
+| 情况                   | 依赖来源         | 获得最新修改 |
+| :--------------------- | :--------------- | :----------- |
+| 你的本地开发 (Reactor) | 内存中的构建结果 | ✅ 能获得     |
+| 外部项目 (传统)        | Maven仓库        | ❌ 获得不了   |
+
+### 6. 验证Reactor行为
+
+<img src="images/image-20250805174441935.png" alt="image-20250805174441935" style="zoom:50%;" />
+
+#### 总结
+
+**Maven Reactor机制的核心价值：**
+
+1. 本地开发友好：确保多模块项目中的修改能立即生效
+2. 构建效率：避免重复下载，直接使用内存中的构建结果
+3. 依赖一致性：保证所有模块使用相同版本的依赖
+
+**关键理解：**
+
+- Reactor是Maven多模块项目的"大脑"，负责协调各模块的构建
+
+- 你的服务能正常运行，正是因为Reactor让所有模块都使用了最新的本地代码
+
+- 但外部项目没有Reactor的保护，只能从Maven仓库获取依赖
+
+这就是为什么你需要发布新版本到Maven仓库的原因！Reactor只保护你的本地开发环境，对外部使用者不起作用。
+
+
+
+## Q5:goods_center_business依赖树显示1.0.6，但编译通过？
+
+<img src="images/image-20250805191756199.png" alt="image-20250805191756199" style="zoom:50%;" />
+
+**编译通过就说明：本地编译实际使用的是1.0.7，而不是依赖树显示的1.0.6。**
+
+解释：关键发现！让我分析一下这个有趣的现象：
+
+<img src="images/image-20250805191927088.png" alt="image-20250805191927088" style="zoom:50%;" />
+
+### 关键问题分析
+
+1. **dependency:tree显示的是"依赖解析信息"，不是"实际使用信息"**
+
+   mvn dependency:tree 做的是：
+
+   - 查询Maven仓库中的版本信息（因为发布到仓库里面center-client的确实是1.0.6）
+
+   - 展示依赖解析的结果
+
+   - 但不代表编译时实际使用的版本
+
+2. **Reactor的"版本覆盖"机制**
+
+   让我用一个验证实验来证明：mvn compile -pl goods_center_business -X 2>&1 | grep "goods_client_common" | head -5
+
+   <img src="images/image-20250805192126910.png" alt="image-20250805192126910" style="zoom:50%;" />
+
+   让我创建一个更清晰的图表来解释这个现象：
+
+   <img src="images/image-20250805192236408.png" alt="image-20250805192236408" style="zoom:50%;" />
+
+### 核心答案：为什么显示1.0.6但编译成功且能拿到对应代码？
+
+原因：Maven Reactor的"双重机制"
+
+1. 依赖解析阶段：
+
+   - dependency:tree 查询的是Maven仓库
+
+   - 显示找到的版本是 1.0.6
+
+2. 编译执行阶段：
+
+   - Reactor检测到这是一个多模块项目
+
+   - 强制使用本地构建的版本 (1.0.7)
+
+   - 覆盖仓库中的版本信息
+
+### 总结
+
+**这个现象的本质**
+
+1. dependency:tree 是"查询工具"：
+
+   - 它去Maven仓库查询依赖信息
+
+   - 显示的是仓库中能找到的版本 (1.0.6)
+
+2. compile 是"构建工具"：
+
+   - Reactor机制介入
+
+   - 实际使用的是本地构建的版本 (1.0.7)
+
+3. 为什么编译成功？
+
+   - 因为Reactor确保了一致性
+
+   - 所有模块实际使用的都是1.0.7版本的代码
+
+**类比理解：**
+
+就像你问GPS："这条路上有什么加油站？"（dependency:tree）
+
+GPS告诉你："有中石油"（显示1.0.6）
+
+但当你真正开车时（compile），你发现路上新开了一家中石化（本地1.0.7），你实际加油的地方是中石化，而不是中石油。
+
+这就是为什么你的代码能正常运行的原因！Reactor保证了内部一致性，但dependency:tree只是个"信息查询工具"，不代表实际使用情况。
+
+**命令查询：**
+
+1、查看真实编译后的版本：
+
+```shell
+mvn help:effective-pom -pl goods_center_business | grep -A 3 -B 3 goods_client_common
+```
+
+![image-20250805193028628](images/image-20250805193028628.png)
+
+<img src="images/image-20250805193626382.png" alt="image-20250805193626382" style="zoom:50%;" />
+
+## 总结
+
+1. Maven会按照pom文件中的依赖顺序依次编译模块。
+
+   <modules>
+     <module>goods_client_common</module> <!-- 1. 先构建 -->
+     <module>goods_center_client</module> <!-- 2. 然后构建这个，会使用刚构建的common -->
+     <module>goods_manage_client</module> <!-- 3. 同样使用最新的common -->
+     <module>goods_center_service</module> <!-- 4. 最后构建，使用最新的client包 -->
+   </modules>
+
+2. 在编译某个模块时，如果他依赖的 “jar包+版本” 在本地已存在，则不会去仓库拉取对应版本的代码，根据reactor机制全部使用内存最新的版本。所以说你本地改了版本进行编译时，无需发布api到仓库也可以编译成功，包括部署服务器。
+
+   <img src="images/image-20250805174318054.png" alt="image-20250805174318054" style="zoom: 33%;" />
+
+3. dependency:tree 是"查询工具"，他是从拉取的maven仓库分析的，而不是实际编译结果，这里会忽略Reactor机制。
+
+   想要看实际编译后依赖的版本：mvn help:effective-pom -pl goods_center_business | grep -A 3 -B 3 goods_client_common
+
+   <img src="images/image-20250805192236408.png" alt="image-20250805192236408" style="zoom:50%;" />
+
+
+
+
+
